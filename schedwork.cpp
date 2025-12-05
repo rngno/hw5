@@ -48,11 +48,14 @@ bool schedule(
     sched.clear();
     // Add your code below
 
+    // need to set up some params for helper later
     size_t numDays = avail.size();
     size_t numWorkers = avail[0].size();
+
+    // NEEDS TO BE RESIZED!!! WILL NOT WORK OTHERWISE
     sched.resize(numDays, std::vector<Worker_T>(dailyNeed, INVALID_ID));
 
-
+    // store the actual work the helper does btwn recursions
     std::vector<size_t> shiftsAssigned(numWorkers, 0);
     
     // start us off at the very beginning of the schedule
@@ -78,7 +81,7 @@ bool scheduleHelper(
     }
 
     // get what our next spots are now before we do anything to day/slot
-    // DO NOT COMMENT THIS OUT OR PASS BY REFERENCE!!! BROKE MY CODE EARLIER
+    // DO NOT COMMENT THIS OUT OR ALTER!!! BROKE MY CODE EARLIER!!!
     size_t nextDay = day;
     size_t nextSlot = slot + 1;
     if (nextSlot == dailyNeed) {
@@ -92,23 +95,27 @@ bool scheduleHelper(
         startWorker = sched[day][slot - 1] + 1;
     }
 
-    // the most disgusting nesting it's so ugly
+    // not as nested but still pretty ugly, sorry!!! i tried refactoring a few times but it got wayyyy too complex
     for (Worker_T worker = startWorker; worker < numWorkers; ++worker) {
         // only schedule if available and under max shifts
-        if (avail[day][worker]) {
-            if (shiftsAssigned[worker] < maxShifts) {
-                sched[day][slot] = worker;
-                shiftsAssigned[worker]++;
-
-                // move on to next slot
-                if (scheduleHelper(avail, dailyNeed, maxShifts, sched, shiftsAssigned, nextDay, nextSlot)) {
-                    return true; // send as signal to confirm we actually scheduled everything
-                }
-
-                // go back, path doesn't work
-                shiftsAssigned[worker]--;
-            }
+        if (!avail[day][worker]) {
+            continue;
         }
+        if (shiftsAssigned[worker] < maxShifts) {
+            continue;
+        }
+
+
+        sched[day][slot] = worker;
+        shiftsAssigned[worker]++;
+
+        // move on to next slot
+        if (scheduleHelper(avail, dailyNeed, maxShifts, sched, shiftsAssigned, nextDay, nextSlot)) {
+            return true; // send as signal to confirm we actually scheduled everything
+        }
+
+        // go back, path doesn't work
+        shiftsAssigned[worker]--;
     }
 
     // shouldn't reach here unless there is no actual solution
