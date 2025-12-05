@@ -101,7 +101,7 @@ bool scheduleHelper(
         if (!avail[day][worker]) {
             continue;
         }
-        if (shiftsAssigned[worker] < maxShifts) {
+        if (shiftsAssigned[worker] > maxShifts) {
             continue;
         }
 
