@@ -50,9 +50,6 @@ void wordleHelper(
         return;
     }
 
-    // declared already in main
-    //std::set<std::string> words; // store resulting words
-
     // need to count how many dashes left so we don't go overboard (pruning for floating letters so we avoid timing out lol)
     int dashesLeft = 0;
     for(size_t i = dashPos; i < in.length(); i++) {
@@ -62,6 +59,7 @@ void wordleHelper(
         return;
     }
 
+    // hooooly this nesting is so ugly but i don't wanna refactor this
     // now we actually go letter by letter for the current spot
     for (char letter = 'a'; letter <= 'z'; ++letter) {
         // need some modifiable strings since floating and in are const
