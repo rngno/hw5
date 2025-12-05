@@ -22,53 +22,70 @@ std::set<std::string> wordle(
     const std::set<std::string>& dict)
 {
     // Add your code here
-    return wordleHelper(in, floating, dict);
+    // add a set to store the words here so that we can keep track thru recursions :3
+    std::set<std::string> words;
+    wordleHelper(in, floating, dict, words);
+    return words;
 }
 
 // Define any helper functions here
 
 // need this to go through each location of the string, main logic of the recursion
 // need some way to remove used floating letters
-std::set<std::string> wordleHelper(
-    const std::string& in,
-    const std::string& floating,
-    const std::set<std::string>& dict)
+void wordleHelper(
+    const std::string in,
+    const std::string floating,
+    const std::set<std::string>& dict,
+    std::set<std::string>& words)
 {
     // base case, check if word is in dict now at the end
     size_t dashPos = in.find('-');
     if (dashPos == string::npos) {
-        if (dict.find(in) != dict.end()) {
-            return {in};
-        } 
-        // no found valid word in dict, return empty so we can keep going
-        else {
-            return {};
+        if(floating.empty()) {
+            // all floating letters used, check if in dict
+            if (dict.find(in) != dict.end()) {
+                words.insert(in);
+            } 
         }
+        return;
     }
 
-    std::set<std::string> words; // store resulting words
-    if (dashPos != string::npos) {
-        // try all letters a-z in the dash position
-        for (char letter = 'a'; letter <= 'z'; ++letter) {
-            std::string newIn = in; // might need this copy to be modified
+    // declared already in main
+    //std::set<std::string> words; // store resulting words
+
+    // need to count how many dashes left so we don't go overboard (pruning for floating letters so we avoid timing out lol)
+    int dashesLeft = 0;
+    for(size_t i = dashPos; i < in.length(); i++) {
+        if(in[i] == '-') dashesLeft++;
+    }
+    if (floating.length() > dashesLeft) {
+        return;
+    }
+
+    // now we actually go letter by letter for the current spot
+    for (char letter = 'a'; letter <= 'z'; ++letter) {
+        // need some modifiable strings since floating and in are const
+        std::string nextFloating = floating;
+        size_t floatPos = nextFloating.find(letter);
+        std::string newIn = in;
+        
+        // only actually recurse if the letter is valid/usable
+        if (floatPos != string::npos) {
+            // this one is a required float!! use here
+            nextFloating.erase(floatPos, 1);
             newIn[dashPos] = letter;
-
-            std::string newFloating = floating; // might need this copy to be modified
-
-            // if letter is in floating, remove it from floating
-            size_t floatPos = newFloating.find(letter);
-
-            // find and nuke all floating letters used
-            if (floatPos != string::npos) {
-                newFloating.erase(floatPos, 1);
+            wordleHelper(newIn, nextFloating, dict, words);
+        } 
+        else {
+            // not a float, but we need to go through some dashes here
+            // plus we have space anyway
+            if (dashesLeft > floating.length()) {
+                newIn[dashPos] = letter;
+                wordleHelper(newIn, nextFloating, dict, words);
             }
-
-            // recurse with modified params to move on to next empty space
-            std::set<std::string> subWords = wordleHelper(newIn, newFloating, dict);
-
-            // insert all found subwords into words set
-            words.insert(subWords.begin(), subWords.end());
         }
+        
+        // did NOT work, so time to go backwards
+        newIn[dashPos] = '-'; 
     }
-    return words;
 }
