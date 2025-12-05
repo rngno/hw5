@@ -23,8 +23,8 @@ std::set<std::string> wordle(
     const std::set<std::string>& dict);
 
 void wordleHelper(
-    const std::string& in,
-    const std::string& floating,
+    const std::string in,
+    const std::string floating,
     const std::set<std::string>& dict,
     std::set<std::string>& words);
 
