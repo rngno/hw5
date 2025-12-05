@@ -22,6 +22,16 @@ static const Worker_T INVALID_ID = (unsigned int)-1;
 
 // Add prototypes for any helper functions here
 
+// declaration for scheduleHelper, gonna need this later for the actual recursion logic
+bool scheduleHelper(
+    const AvailabilityMatrix& avail,
+    const size_t dailyNeed,
+    const size_t maxShifts,
+    DailySchedule& sched,
+    std::vector<size_t>& shiftsAssigned,
+    size_t day,
+    size_t slot);
+
 
 // Add your implementation of schedule() and other helper functions here
 
@@ -38,8 +48,70 @@ bool schedule(
     sched.clear();
     // Add your code below
 
+    size_t numDays = avail.size();
+    size_t numWorkers = avail[0].size();
+    sched.resize(numDays, std::vector<Worker_T>(dailyNeed, INVALID_ID));
 
 
+    std::vector<size_t> shiftsAssigned(numWorkers, 0);
+    
+    // start us off at the very beginning of the schedule
+    return scheduleHelper(avail, dailyNeed, maxShifts, sched, shiftsAssigned, 0, 0);
 
+}
+
+bool scheduleHelper(
+    const AvailabilityMatrix& avail,
+    const size_t dailyNeed,
+    const size_t maxShifts,
+    DailySchedule& sched,
+    std::vector<size_t>& shiftsAssigned,
+    size_t day,
+    size_t slot
+){
+    size_t numDays = avail.size();
+    size_t numWorkers = avail[0].size();
+
+    // base case
+    if (day == numDays) {
+        return true;
+    }
+
+    // get what our next spots are now before we do anything to day/slot
+    // DO NOT COMMENT THIS OUT OR PASS BY REFERENCE!!! BROKE MY CODE EARLIER
+    size_t nextDay = day;
+    size_t nextSlot = slot + 1;
+    if (nextSlot == dailyNeed) {
+        nextDay = day + 1;
+        nextSlot = 0;
+    }
+
+    // make sure the first worker is set, needs to be INCREASING
+    Worker_T startWorker = 0;
+    if (slot > 0) {
+        startWorker = sched[day][slot - 1] + 1;
+    }
+
+    // the most disgusting nesting it's so ugly
+    for (Worker_T worker = startWorker; worker < numWorkers; ++worker) {
+        // only schedule if available and under max shifts
+        if (avail[day][worker]) {
+            if (shiftsAssigned[worker] < maxShifts) {
+                sched[day][slot] = worker;
+                shiftsAssigned[worker]++;
+
+                // move on to next slot
+                if (scheduleHelper(avail, dailyNeed, maxShifts, sched, shiftsAssigned, nextDay, nextSlot)) {
+                    return true; // send as signal to confirm we actually scheduled everything
+                }
+
+                // go back, path doesn't work
+                shiftsAssigned[worker]--;
+            }
+        }
+    }
+
+    // shouldn't reach here unless there is no actual solution
+    return false;
 }
 
